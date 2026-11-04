@@ -1,15 +1,21 @@
 # ITRACKB4 Laboratory Activity 10
 
-# G1. Route Model Binding
-
-Route model binding requires the Subject model to be type-hinted and the parameter name $subject to match the {subject} route segment. If either condition is incorrect, Laravel may fail to inject the expected record, and the method will not work as intended.
+# H1. The top of your error page named a file inside vendor. Say why that was not where your mistake was, and where the page showed you it actually was.
 
 
-# G2. Why the Delete Link Gave a 404
-
-My Delete link sent a GET request, but the subjects.destroy route expects a DELETE request. Replacing the link with a POST form containing @csrf and @method('DELETE') allowed Laravel to process the deletion correctly.
 
 
-# G3. The Second Argument of old()
+The vendor file was not where my mistake was because it contained Laravel's framework code, not my own application code. The error page showed that the actual mistake was in app/Http/Controllers/SubjectController.php, specifically on the line where I accidentally added an extra letter to the with() method.
 
-The second argument of old() supplies the subject's existing value when the edit form first opens. Without it, the fields may be empty; using only the existing value would prevent previously typed values from being restored after validation fails.
+
+# H2. You wrote one Log::info line with a context array. Name something it will tell you next month that the error page could not.
+
+
+The context array in Log::info() will tell me the specific subject ID that was saved. This helps me identify which record was involved in an operation next month, even when the original error page is no longer available.
+
+
+#  H3. Your guard answers with 403 instead of redirecting back with a message. Say when each of the two is the better answer.
+
+
+
+A 403 error is better when the user attempts an action that is not allowed, such as deleting a subject that is still required by another subject. Redirecting back with a message is better when the action is valid but cannot be completed, and the user can correct the issue or try again.

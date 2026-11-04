@@ -6,67 +6,66 @@ use App\Models\Prerequisite;
 use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\log;
 
 class SubjectController extends Controller
 {
     /**
      * Display the list of subjects.
      */
-    public function index(Request $request)
-    {
-        DB::flushQueryLog();
-        DB::enableQueryLog();
+   
+public function index(Request $request)
+{
+    DB::flushQueryLog();
+    DB::enableQueryLog();
 
-        $query = Subject::with('prerequisite')
-            ->whereNotIn('id', [6, 7]);
+    $query = Subject::with('prerequisite')
+        ->whereNotIn('id', [6, 7]);
 
-        // Filter by subject code
-        if ($request->filled('code')) {
-            $query->where(
-                'code',
-                'like',
-                '%' . $request->input('code') . '%'
-            );
-        }
-
-        // Filter by units
-        if ($request->filled('units')) {
-            $query->where(
-                'units',
-                $request->input('units')
-            );
-        }
-
-        // Filter by prerequisite
-        if ($request->filled('prerequisite_id')) {
-            $query->where(
-                'prerequisite_id',
-                $request->input('prerequisite_id')
-            );
-        }
-
-        // Get subjects and their prerequisites
-        $subjects = $query->orderBy('id')->get();
-
-        // Count SQL queries
-        $queries = DB::getQueryLog();
-        $queryCount = count($queries);
-
-        DB::disableQueryLog();
-
-        // Get prerequisites for the filter dropdown
-        $prerequisites = Prerequisite::orderBy('name')->get();
-
-        return view('subjects.index', compact(
-            'subjects',
-            'prerequisites',
-            'queryCount'
-        ));
+    // Filter by subject code
+    if ($request->filled('code')) {
+        $query->where(
+            'code',
+            'like',
+            '%' . $request->input('code') . '%'
+        );
     }
 
-    /**
-     * Show the form for creating a subject.
-     */
+    // Filter by units
+    if ($request->filled('units')) {
+        $query->where(
+            'units',
+            $request->input('units')
+        );
+    }
+
+    // Filter by prerequisite
+    if ($request->filled('prerequisite_id')) {
+        $query->where(
+            'prerequisite_id',
+            $request->input('prerequisite_id')
+        );
+    }
+
+    // Get subjects and their prerequisites
+    $subjects = $query->orderBy('id')->get();
+
+    // Count SQL queries
+    $queries = DB::getQueryLog();
+    $queryCount = count($queries);
+
+    DB::disableQueryLog();
+
+    // Get prerequisites for the filter dropdown
+    $prerequisites = Prerequisite::orderBy('name')->get();
+
+    return view('subjects.index', compact(
+        'subjects',
+        'prerequisites',
+        'queryCount'
+    ));
+}
+
     public function create()
     {
         $prerequisites = Prerequisite::orderBy('name')->get();
@@ -77,24 +76,30 @@ class SubjectController extends Controller
     /**
      * Store a newly created subject.
      */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'code' => 'required|string|max:255|unique:subjects,code',
-            'title' => 'required|string|max:255',
-            'units' => 'required|integer|min:1',
-            'is_active' => 'sometimes|boolean',
-            'prerequisite_id' => 'nullable|exists:prerequisites,id',
-        ]);
+    
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'code' => 'required|string|max:255|unique:subjects,code',
+        'title' => 'required|string|max:255',
+        'units' => 'required|integer|min:1',
+        'is_active' => 'sometimes|boolean',
+        'prerequisite_id' => 'nullable|exists:prerequisites,id',
+    ]);
 
-        $validated['is_active'] = $request->boolean('is_active');
+    $validated['is_active'] = $request->boolean('is_active');
 
-        Subject::create($validated);
+    $subject = Subject::create($validated);
 
-        return redirect()
-            ->route('subjects.index')
-            ->with('success', 'Subject added successfully!');
-    }
+    // Record the saved subject in the Laravel log
+    Log::info('Subject saved', [
+        'id' => $subject->id
+    ]);
+
+    return redirect()
+        ->route('subjects.index')
+        ->with('success', 'Subject added successfully!');
+}
 
     /**
      * Display the specified subject.
@@ -142,12 +147,20 @@ class SubjectController extends Controller
     /**
      * Remove the specified subject.
      */
-    public function destroy(Subject $subject)
-    {
-        $subject->delete();
+    
+public function destroy(Subject $subject)
+{
+    abort_if(
+        $subject->prerequisite !== null &&
+        $subject->prerequisite->subjects()->count() === 1,
+        403
+    );
 
-        return redirect()
-            ->route('subjects.index')
-            ->with('success', 'Subject deleted successfully!');
-    }
+    $subject->delete();
+
+    return redirect()
+        ->route('subjects.index')
+        ->with('success', 'Subject deleted successfully!');
+}
+
 }
