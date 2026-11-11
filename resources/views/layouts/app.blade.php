@@ -1,25 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Subjects')</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <nav class="navbar navbar-expand navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{{ route('subjects.index') }}">Subjects</a>
-            <a class="nav-link text-white" href="{{ route('subjects.featured') }}">Featured</a>
-        </div>
-    </nav>
 
-    <div class="container">
+    <title>@yield('title', 'Academic Subjects')</title>
+
+    {{-- Bootstrap CSS --}}
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+</head>
+
+<body>
+
+    {{-- NAVIGATION PARTIAL --}}
+    @include('partials._nav')
+
+    {{-- SUCCESS MESSAGE --}}
+    <div class="container mt-4">
+
         @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+
+                {{ session('success') }}
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close">
+                </button>
+
+            </div>
         @endif
 
-        @yield('content')
     </div>
+
+    {{-- PAGE CONTENT --}}
+    <main class="container">
+
+        @yield('content')
+
+    </main>
+
+    {{-- BOOTSTRAP JAVASCRIPT --}}
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
+
 </body>
+
 </html>

@@ -1,13 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SubjectController;
-use App\Models\Subject;
 
-Route::get('/', function () {
-    return redirect()->route('subjects.index');
-});
+Route::get('/', [HomeController::class, 'index'])
+    ->name('home');
 
 Route::get('/subjects', [SubjectController::class, 'index'])
     ->name('subjects.index');
@@ -29,4 +27,3 @@ Route::delete('/subjects/{subject}', [SubjectController::class, 'destroy'])
 
 Route::get('/subjects/{subject}', [SubjectController::class, 'show'])
     ->name('subjects.show');
-

@@ -1,25 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Subject Details</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet">
-</head>
-<body class="container py-4">
+@extends('layouts.app')
 
-    <h1>Subject Details</h1>
+@section('title', 'Subject Details')
 
-    <p><strong>Code:</strong> {{ $subject->code }}</p>
-    <p><strong>Title:</strong> {{ $subject->title }}</p>
-    <p><strong>Units:</strong> {{ $subject->units }}</p>
-    <p><strong>Active:</strong> {{ $subject->is_active ? 'Yes' : 'No' }}</p>
-    <p><strong>Prerequisite:</strong> {{ $subject->prerequisite->name }}</p>
+@section('content')
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Subject Details</h1>
 
-    <a href="{{ route('subjects.index') }}" class="btn btn-secondary">
-        Back
-    </a>
+        <a href="{{ route('subjects.index') }}" class="btn btn-secondary">
+            Back to Subject List
+        </a>
+    </div>
 
-</body>
-</html>
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+            Subject Information
+        </div>
+
+        <div class="card-body">
+            <p>
+                <strong>Subject Code:</strong>
+                {{ $subject->code }}
+            </p>
+
+            <p>
+                <strong>Subject Title:</strong>
+                {{ $subject->title }}
+            </p>
+
+            <p>
+                <strong>Units:</strong>
+                {{ $subject->units }}
+            </p>
+
+            <p>
+                <strong>Prerequisite:</strong>
+                {{ $subject->prerequisite?->name ?? 'None' }}
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+                @if ($subject->is_active)
+                    <span class="badge bg-success">Active</span>
+                @else
+                    <span class="badge bg-danger">Inactive</span>
+                @endif
+            </p>
+        </div>
+
+        <div class="card-footer">
+            <a href="{{ route('subjects.edit', $subject) }}"
+               class="btn btn-primary">
+                Edit Subject
+            </a>
+
+            <a href="{{ route('subjects.index') }}"
+               class="btn btn-secondary">
+                Back
+            </a>
+        </div>
+    </div>
+</div>
+@endsection

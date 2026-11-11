@@ -6,7 +6,7 @@ use App\Models\Prerequisite;
 use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\log;
+use Illuminate\Support\Facades\Log;
 
 class SubjectController extends Controller
 {
@@ -16,132 +16,46 @@ class SubjectController extends Controller
    
 public function index(Request $request)
 {
-    DB::flushQueryLog();
-    DB::enableQueryLog();
+    $query = Subject::with('prerequisite');
 
-    $query = Subject::with('prerequisite')
-        ->whereNotIn('id', [6, 7]);
-
-    // Filter by subject code
+    // H2: Search by Subject Code
     if ($request->filled('code')) {
-        $query->where(
-            'code',
-            'like',
-            '%' . $request->input('code') . '%'
-        );
+        $query->where('code', 'like', '%' . $request->code . '%');
     }
 
-    // Filter by units
+    // Existing Filter: Units
     if ($request->filled('units')) {
-        $query->where(
-            'units',
-            $request->input('units')
-        );
+        $query->where('units', $request->units);
     }
 
-    // Filter by prerequisite
+    // H3: Filter by Prerequisite
     if ($request->filled('prerequisite_id')) {
-        $query->where(
-            'prerequisite_id',
-            $request->input('prerequisite_id')
-        );
+        $query->where('prerequisite_id', $request->prerequisite_id);
     }
 
-    // Get subjects and their prerequisites
-    $subjects = $query->orderBy('id')->get();
+    // H4: Filter by Active / Inactive
+    $active = $request->query('is_active');
 
-    // Count SQL queries
-    $queries = DB::getQueryLog();
-    $queryCount = count($queries);
-
-    DB::disableQueryLog();
-
-    // Get prerequisites for the filter dropdown
-    $prerequisites = Prerequisite::orderBy('name')->get();
-
-    return view('subjects.index', compact(
-        'subjects',
-        'prerequisites',
-        'queryCount'
-    ));
-}
-
-    public function create()
-    {
-        $prerequisites = Prerequisite::orderBy('name')->get();
-
-        return view('subjects.create', compact('prerequisites'));
+    if ($active !== null && $active !== '') {
+        $query->where('is_active', $active);
     }
 
-    /**
-     * Store a newly created subject.
-     */
-    
-public function store(Request $request)
-{
-    $validated = $request->validate([
-        'code' => 'required|string|max:255|unique:subjects,code',
-        'title' => 'required|string|max:255',
-        'units' => 'required|integer|min:1',
-        'is_active' => 'sometimes|boolean',
-        'prerequisite_id' => 'nullable|exists:prerequisites,id',
-    ]);
+    // I2 and I3: Validate allowed sorting columns
+    $sort = $request->query('sort', 'id');
 
-    $validated['is_active'] = $request->boolean('is_active');
-
-    $subject = Subject::create($validated);
-
-    // Record the saved subject in the Laravel log
-    Log::info('Subject saved', [
-        'id' => $subject->id
-    ]);
-
-    return redirect()
-        ->route('subjects.index')
-        ->with('success', 'Subject added successfully!');
-}
-
-    /**
-     * Display the specified subject.
-     */
-    public function show(Subject $subject)
-    {
-         $prerequisites = Prerequisite::all();
-
-    return view('subjects.edit', compact('subject', 'prerequisites'));
+    if (! in_array($sort, ['code', 'title'])) {
+        $sort = 'id';
     }
 
-    /**
-     * Show the form for editing a subject.
-     */
-    public function edit(Subject $subject)
-    {
-        $prerequisites = Prerequisite::orderBy('name')->get();
+    // I4: Sort first, then paginate, then preserve query strings
+    $subjects = $query->orderBy($sort, 'asc')
+                      ->paginate(7)
+                      ->withQueryString();
 
-        return view('subjects.edit', compact(
-            'subject',
-            'prerequisites'
-        ));
-    }
+    // Get prerequisites for dropdown
+    $prerequisites = Prerequisite::all();
 
-    /**
-     * Update the specified subject.
-     */
-    public function update(Request $request, Subject $subject)
-    {
-        $validated = validator($request->all(), [
-        'code' => 'required|string|max:255',
-        'title' => 'required|string|max:255',
-        'units' => 'required|integer|min:1',
-        'is_active' => 'required|boolean',
-        'prerequisite_id' => 'nullable|exists:prerequisites,id',
-    ])->validate();
-
-    $subject->update($validated);
-
-    return redirect()
-        ->route('subjects.index')
-        ->with('success', 'Subject updated successfully!');
+    return view('subjects.index', compact('subjects', 'prerequisites'));
     }
 
     /**

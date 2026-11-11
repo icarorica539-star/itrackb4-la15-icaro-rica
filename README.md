@@ -1,21 +1,15 @@
 # ITRACKB4 Laboratory Activity 10
 
-# H1. The top of your error page named a file inside vendor. Say why that was not where your mistake was, and where the page showed you it actually was.
+# J1. Your HomeController is not a resource controller. Name two things an index() on a resource controller does that yours does not have to.
+
+A resource controller's index() usually retrieves and displays a list of records from a database. My HomeController does not need to retrieve and display all subject records. Instead, it only gets the total number of subjects and prerequisites and displays them on the home page.
 
 
+# J2. Your pagination links lost the search term until you added one method. Say what those links contained before, and what the controller therefore received.
+
+Before adding withQueryString(), the pagination links contained only the page number, such as ?page=2. The controller therefore received the page number but did not receive the previous search term or filters. Adding withQueryString() preserves the existing query parameters when navigating between pages.
 
 
-The vendor file was not where my mistake was because it contained Laravel's framework code, not my own application code. The error page showed that the actual mistake was in app/Http/Controllers/SubjectController.php, specifically on the line where I accidentally added an extra letter to the with() method.
+# J3. A misspelled sort value does not break your page. Explain why that is worse than an error, and what your allowed list does about it.
 
-
-# H2. You wrote one Log::info line with a context array. Name something it will tell you next month that the error page could not.
-
-
-The context array in Log::info() will tell me the specific subject ID that was saved. This helps me identify which record was involved in an operation next month, even when the original error page is no longer available.
-
-
-#  H3. Your guard answers with 403 instead of redirecting back with a message. Say when each of the two is the better answer.
-
-
-
-A 403 error is better when the user attempts an action that is not allowed, such as deleting a subject that is still required by another subject. Redirecting back with a message is better when the action is valid but cannot be completed, and the user can correct the issue or try again.
+A misspelled sort value is worse because it can silently produce an incorrectly ordered list without showing an error. My allowed list checks whether the requested sort column is either code or title. If the value is invalid, it falls back to the default id column to keep the page working safely.

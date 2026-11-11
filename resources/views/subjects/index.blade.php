@@ -1,20 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+@extends('layouts.app')
 
-    <title>My Subjects</title>
+@section('title', 'My Subjects')
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-</head>
+@section('content')
 
-<body class="bg-light">
-
-<div class="container py-5">
+<div class="container py-4">
 
     {{-- Page Heading --}}
     <div class="mb-4">
@@ -50,18 +40,20 @@
         </a>
     </div>
 
-    {{-- Filters --}}
+    {{-- Search, Filters, and Sorting --}}
     <div class="card mb-4">
+
         <div class="card-header">
-            <strong>Filter Subjects</strong>
+            <strong>Search and Filter Subjects</strong>
         </div>
 
         <div class="card-body">
+
             <form method="GET" action="{{ route('subjects.index') }}">
 
                 <div class="row g-3">
 
-                    {{-- Search by Code --}}
+                    {{-- Search by Subject Code --}}
                     <div class="col-md-4">
                         <label for="code" class="form-label">
                             Subject Code
@@ -83,22 +75,22 @@
                             Units
                         </label>
 
-                        <select
-                            name="units"
-                            id="units"
-                            class="form-select"
-                        >
+                        <select name="units"
+                                id="units"
+                                class="form-select">
+
                             <option value="">All Units</option>
 
                             <option value="2"
-                                {{ request('units') == '2' ? 'selected' : '' }}>
+                                @selected(request('units') == '2')>
                                 2 Units
                             </option>
 
                             <option value="3"
-                                {{ request('units') == '3' ? 'selected' : '' }}>
+                                @selected(request('units') == '3')>
                                 3 Units
                             </option>
+
                         </select>
                     </div>
 
@@ -111,40 +103,100 @@
                         <select
                             name="prerequisite_id"
                             id="prerequisite_id"
-                            class="form-select"
-                        >
+                            class="form-select">
+
                             <option value="">All Prerequisites</option>
 
                             @foreach ($prerequisites as $prerequisite)
                                 <option
                                     value="{{ $prerequisite->id }}"
-                                    {{ request('prerequisite_id') == $prerequisite->id ? 'selected' : '' }}
+                                    @selected(request('prerequisite_id') == $prerequisite->id)
                                 >
                                     {{ $prerequisite->name }}
                                 </option>
                             @endforeach
+
+                        </select>
+                    </div>
+
+                    {{-- Filter by Active Status --}}
+                    <div class="col-md-4">
+                        <label for="is_active" class="form-label">
+                            Status
+                        </label>
+
+                        <select
+                            name="is_active"
+                            id="is_active"
+                            class="form-select">
+
+                            <option value="">Any Status</option>
+
+                            <option value="1"
+                                @selected(request('is_active') === '1')>
+                                Active
+                            </option>
+
+                            <option value="0"
+                                @selected(request('is_active') === '0')>
+                                Inactive
+                            </option>
+
+                        </select>
+                    </div>
+
+                    {{-- Sort Subjects --}}
+                    <div class="col-md-4">
+                        <label for="sort" class="form-label">
+                            Sort By
+                        </label>
+
+                        <select name="sort"
+                                id="sort"
+                                class="form-select">
+
+                            <option value="id"
+                                @selected(request('sort', 'id') === 'id')>
+                                Default
+                            </option>
+
+                            <option value="code"
+                                @selected(request('sort') === 'code')>
+                                Subject Code
+                            </option>
+
+                            <option value="title"
+                                @selected(request('sort') === 'title')>
+                                Subject Title
+                            </option>
+
                         </select>
                     </div>
 
                 </div>
 
+                {{-- Apply and Clear Buttons --}}
                 <div class="mt-3">
+
                     <button type="submit" class="btn btn-success">
-                        Filter
+                        Apply Filters
                     </button>
 
                     <a href="{{ route('subjects.index') }}"
                        class="btn btn-secondary">
-                        Reset
+                        Clear
                     </a>
+
                 </div>
 
             </form>
+
         </div>
     </div>
 
     {{-- Subjects Table --}}
     <div class="card">
+
         <div class="card-header bg-dark text-white">
             <strong>Subject List</strong>
         </div>
@@ -152,6 +204,7 @@
         <div class="card-body">
 
             <div class="table-responsive">
+
                 <table class="table table-bordered table-striped table-hover">
 
                     <thead class="table-dark">
@@ -166,11 +219,33 @@
                     </thead>
 
                     <tbody>
+
                         @forelse ($subjects as $subject)
+
                             <tr>
+
                                 <td>{{ $subject->id }}</td>
-                                <td>{{ $subject->code }}</td>
-                                <td>{{ $subject->title }}</td>
+
+                                {{-- Clickable Subject Code --}}
+                                <td>
+                                    <a
+                                        href="{{ route('subjects.show', $subject) }}"
+                                        class="text-decoration-none fw-bold"
+                                    >
+                                        {{ $subject->code }}
+                                    </a>
+                                </td>
+
+                                {{-- Clickable Subject Title --}}
+                                <td>
+                                    <a
+                                        href="{{ route('subjects.show', $subject) }}"
+                                        class="text-decoration-none"
+                                    >
+                                        {{ $subject->title }}
+                                    </a>
+                                </td>
+
                                 <td>{{ $subject->units }}</td>
 
                                 <td>
@@ -182,6 +257,7 @@
                                 </td>
 
                                 <td>
+
                                     {{-- Edit Button --}}
                                     <a
                                         href="{{ route('subjects.edit', $subject) }}"
@@ -190,13 +266,14 @@
                                         Edit
                                     </a>
 
-                                    {{-- Delete Form for Screenshot 8 --}}
+                                    {{-- Delete Button --}}
                                     <form
                                         action="{{ route('subjects.destroy', $subject) }}"
                                         method="POST"
                                         class="d-inline"
                                         onsubmit="return confirm('Are you sure you want to delete this subject?');"
                                     >
+
                                         @csrf
                                         @method('DELETE')
 
@@ -206,32 +283,37 @@
                                         >
                                             Delete
                                         </button>
+
                                     </form>
+
                                 </td>
+
                             </tr>
+
                         @empty
+
                             <tr>
                                 <td colspan="6" class="text-center">
                                     No subjects found.
                                 </td>
                             </tr>
+
                         @endforelse
+
                     </tbody>
 
                 </table>
+
             </div>
 
-            {{-- SQL Query Count --}}
-            <p class="mt-3 mb-0">
-                <strong>Queries:</strong> 7
-            </p>
+            {{-- Pagination --}}
+            <div class="mt-3">
+                {{ $subjects->links() }}
+            </div>
 
         </div>
     </div>
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
-</html>
+@endsection
