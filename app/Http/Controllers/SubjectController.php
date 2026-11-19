@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Prerequisite;
 use App\Models\Subject;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class SubjectController extends Controller
@@ -13,68 +12,148 @@ class SubjectController extends Controller
     /**
      * Display the list of subjects.
      */
-   
-public function index(Request $request)
-{
-    $query = Subject::with('prerequisite');
+    public function index(Request $request)
+    {
+        $query = Subject::with('prerequisite');
 
-    // H2: Search by Subject Code
-    if ($request->filled('code')) {
-        $query->where('code', 'like', '%' . $request->code . '%');
+        // H2: Search by Subject Code
+        if ($request->filled('code')) {
+            $query->where('code', 'like', '%' . $request->code . '%');
+        }
+
+        // Filter by Units
+        if ($request->filled('units')) {
+            $query->where('units', $request->units);
+        }
+
+        // H3: Filter by Prerequisite
+        if ($request->filled('prerequisite_id')) {
+            $query->where('prerequisite_id', $request->prerequisite_id);
+        }
+
+        // H4: Filter by Active / Inactive
+        $active = $request->query('is_active');
+
+        if ($active !== null && $active !== '') {
+            $query->where('is_active', $active);
+        }
+
+        // I2 and I3: Validate sorting columns
+        $sort = $request->query('sort', 'id');
+
+        if (!in_array($sort, ['code', 'title'])) {
+            $sort = 'id';
+        }
+
+        // I4: Sort, paginate, preserve query strings
+        $subjects = $query->orderBy($sort, 'asc')
+            ->paginate(7)
+            ->withQueryString();
+
+        $prerequisites = Prerequisite::all();
+
+        return view('subjects.index', compact(
+            'subjects',
+            'prerequisites'
+        ));
     }
 
-    // Existing Filter: Units
-    if ($request->filled('units')) {
-        $query->where('units', $request->units);
+    /**
+     * Show the form for creating a subject.
+     */
+    public function create()
+    {
+        $prerequisites = Prerequisite::all();
+
+        return view('subjects.create', compact('prerequisites'));
     }
 
-    // H3: Filter by Prerequisite
-    if ($request->filled('prerequisite_id')) {
-        $query->where('prerequisite_id', $request->prerequisite_id);
+    /**
+     * Store a newly created subject.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'code' => 'required|string|max:255|unique:subjects,code',
+            'title' => 'required|string|max:255',
+            'units' => 'required|integer|min:1',
+            'is_active' => 'sometimes|boolean',
+            'prerequisite_id' => 'nullable|exists:prerequisites,id',
+        ]);
+
+        $validated['is_active'] = $request->boolean('is_active');
+
+        $subject = Subject::create($validated);
+
+        Log::info('Subject saved', [
+            'subject_id' => $subject->id,
+        ]);
+
+        return redirect()
+            ->route('subjects.index')
+            ->with('success', 'Subject added successfully!');
     }
 
-    // H4: Filter by Active / Inactive
-    $active = $request->query('is_active');
+    /**
+     * Display the specified subject.
+     */
+    public function show(Subject $subject)
+    {
+        $subject->load('prerequisite');
 
-    if ($active !== null && $active !== '') {
-        $query->where('is_active', $active);
+        return view('subjects.show', compact('subject'));
     }
 
-    // I2 and I3: Validate allowed sorting columns
-    $sort = $request->query('sort', 'id');
+    /**
+     * Show the form for editing a subject.
+     */
+    public function edit(Subject $subject)
+    {
+        $prerequisites = Prerequisite::all();
 
-    if (! in_array($sort, ['code', 'title'])) {
-        $sort = 'id';
+        return view('subjects.edit', compact(
+            'subject',
+            'prerequisites'
+        ));
     }
 
-    // I4: Sort first, then paginate, then preserve query strings
-    $subjects = $query->orderBy($sort, 'asc')
-                      ->paginate(7)
-                      ->withQueryString();
+    /**
+     * Update the specified subject.
+     */
+    public function update(Request $request, Subject $subject)
+    {
+        $validated = $request->validate([
+            'code' => 'required|string|max:255|unique:subjects,code,' . $subject->id,
+            'title' => 'required|string|max:255',
+            'units' => 'required|integer|min:1',
+            'is_active' => 'sometimes|boolean',
+            'prerequisite_id' => 'nullable|exists:prerequisites,id',
+        ]);
 
-    // Get prerequisites for dropdown
-    $prerequisites = Prerequisite::all();
+        $validated['is_active'] = $request->boolean('is_active');
 
-    return view('subjects.index', compact('subjects', 'prerequisites'));
+        $subject->update($validated);
+
+        return redirect()
+            ->route('subjects.index')
+            ->with('success', 'Subject updated successfully!');
     }
 
     /**
      * Remove the specified subject.
      */
-    
-public function destroy(Subject $subject)
-{
-    abort_if(
-        $subject->prerequisite !== null &&
-        $subject->prerequisite->subjects()->count() === 1,
-        403
-    );
+    public function destroy(Subject $subject)
+    {
+        abort_if(
+            $subject->prerequisite !== null &&
+            $subject->prerequisite->subjects()->count() === 1,
+            403
+        );
 
-    $subject->delete();
+        $subject->delete();
 
-    return redirect()
-        ->route('subjects.index')
-        ->with('success', 'Subject deleted successfully!');
-}
-
+        return redirect()
+            ->route('subjects.index')
+            ->with('success', 'Subject deleted successfully!');
+    }
 }

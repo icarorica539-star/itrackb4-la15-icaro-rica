@@ -1,15 +1,29 @@
 # ITRACKB4 Laboratory Activity 10
 
-# J1. Your HomeController is not a resource controller. Name two things an index() on a resource controller does that yours does not have to.
+# F1. Authentication and authorisation are not the same. In one sentence each: what did this lesson give you, and what is still missing next meeting?
 
-A resource controller's index() usually retrieves and displays a list of records from a database. My HomeController does not need to retrieve and display all subject records. Instead, it only gets the total number of subjects and prerequisites and displays them on the home page.
-
-
-# J2. Your pagination links lost the search term until you added one method. Say what those links contained before, and what the controller therefore received.
-
-Before adding withQueryString(), the pagination links contained only the page number, such as ?page=2. The controller therefore received the page number but did not receive the previous search term or filters. Adding withQueryString() preserves the existing query parameters when navigating between pages.
+Authentication helps identify the user, and authorisation checks what that user is allowed to access. The lesson has shown me how to do registration, log in, log out, and protect the routes. At the next class, I still have to figure out how to manage user permissions.
 
 
-# J3. A misspelled sort value does not break your page. Explain why that is worse than an error, and what your allowed list does about it.
 
-A misspelled sort value is worse because it can silently produce an incorrectly ordered list without showing an error. My allowed list checks whether the requested sort column is either code or title. If the value is invalid, it falls back to the default id column to keep the page working safely.
+# F2. Why does a successful login call session()->regenerate()? What goes wrong if you skip it?
+
+The usage of session()->regenerate() generates a new session ID when logging in and thus protects against session fixation attacks. Otherwise, an attacker could use the existing session ID to log into the user's account.
+
+
+# F3. Why does a failed login use the same message for a wrong password and an unknown email?
+
+Only one message stops the attackers from understanding whether an email is registered in the system or not.
+
+
+# F4. Why do index and show stay public while create/edit/update/destroy use auth?
+
+Index and show routes remain public for everybody to see the list and info of the subjects, whereas other actions (create, edit, update, destroy) should be available for authenticated users only.
+
+# F5. You hid Add (and actions) for guests. Why is that not enough to secure those actions? What actually stops a stranger?
+
+To hide Add, Edit, and Destroy buttons will not solve the problem. The auth middleware is responsible for blocking guests from reaching protected routes.
+
+# F6. In screenshot 20 the route name was wrong. Why does auth middleware care that the route is named exactly login?
+
+Middleware auth redirects unauthenticated guests using the route name login to this route. However, if the route has another name, Laravel will not find it and display an error Route [login] not defined.

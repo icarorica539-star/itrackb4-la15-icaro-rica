@@ -1,14 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Subject</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+@extends('layouts.app')
 
-<body class="bg-light">
+@section('title', 'Add Subject')
+
+@section('content')
+
 <div class="container py-5">
+
     <div class="card shadow-sm">
 
         <div class="card-header bg-dark text-white">
@@ -17,9 +14,11 @@
 
         <div class="card-body">
 
+            {{-- VALIDATION ERRORS --}}
             @if ($errors->any())
                 <div class="alert alert-danger">
                     <strong>Please correct the following errors:</strong>
+
                     <ul class="mb-0 mt-2">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -28,22 +27,32 @@
                 </div>
             @endif
 
+            {{-- ADD SUBJECT FORM --}}
             <form action="{{ route('subjects.store') }}" method="POST">
                 @csrf
 
                 <div class="mb-3">
                     <label class="form-label">Code</label>
-                    <input type="text" name="code" class="form-control" value="{{ old('code') }}">
+                    <input type="text"
+                           name="code"
+                           class="form-control"
+                           value="{{ old('code') }}">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Title</label>
-                    <input type="text" name="title" class="form-control" value="{{ old('title') }}">
+                    <input type="text"
+                           name="title"
+                           class="form-control"
+                           value="{{ old('title') }}">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Units</label>
-                    <input type="number" name="units" class="form-control" value="{{ old('units') }}">
+                    <input type="number"
+                           name="units"
+                           class="form-control"
+                           value="{{ old('units') }}">
                 </div>
 
                 <div class="mb-3">
@@ -59,20 +68,31 @@
                     <label class="form-label">Prerequisite</label>
                     <select name="prerequisite_id" class="form-select">
                         <option value="">Select...</option>
+
                         @foreach ($prerequisites as $prerequisite)
                             <option value="{{ $prerequisite->id }}"
-                                @selected(old('prerequisite_id') == $prerequisite->id)
-                            >{{ $prerequisite->name }}</option>
+                                @selected(old('prerequisite_id') == $prerequisite->id)>
+                                {{ $prerequisite->name }}
+                            </option>
                         @endforeach
+
                     </select>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Save</button>
-                <a href="{{ route('subjects.index') }}" class="btn btn-outline-dark">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    Save
+                </button>
+
+                <a href="{{ route('subjects.index') }}"
+                   class="btn btn-outline-dark">
+                    Cancel
+                </a>
+
             </form>
 
         </div>
     </div>
+
 </div>
-</body>
-</html>
+
+@endsection

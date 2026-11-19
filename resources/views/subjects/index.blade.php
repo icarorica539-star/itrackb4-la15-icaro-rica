@@ -32,13 +32,15 @@
         </div>
     @endif
 
-    {{-- Add Subject Button --}}
-    <div class="mb-3">
-        <a href="{{ route('subjects.create') }}"
-           class="btn btn-primary">
-            Add Subject
-        </a>
-    </div>
+    {{-- Add Subject Button: Authenticated Users Only --}}
+    @auth
+        <div class="mb-3">
+            <a href="{{ route('subjects.create') }}"
+               class="btn btn-primary">
+                + Add Subject
+            </a>
+        </div>
+    @endauth
 
     {{-- Search, Filters, and Sorting --}}
     <div class="card mb-4">
@@ -214,7 +216,11 @@
                             <th>Title</th>
                             <th>Units</th>
                             <th>Prerequisite</th>
-                            <th>Actions</th>
+
+                            {{-- Actions Heading: Authenticated Users Only --}}
+                            @auth
+                                <th>Actions</th>
+                            @endauth
                         </tr>
                     </thead>
 
@@ -256,44 +262,48 @@
                                     @endif
                                 </td>
 
-                                <td>
+                                {{-- Edit and Delete: Authenticated Users Only --}}
+                                @auth
+                                    <td>
 
-                                    {{-- Edit Button --}}
-                                    <a
-                                        href="{{ route('subjects.edit', $subject) }}"
-                                        class="btn btn-sm btn-primary"
-                                    >
-                                        Edit
-                                    </a>
-
-                                    {{-- Delete Button --}}
-                                    <form
-                                        action="{{ route('subjects.destroy', $subject) }}"
-                                        method="POST"
-                                        class="d-inline"
-                                        onsubmit="return confirm('Are you sure you want to delete this subject?');"
-                                    >
-
-                                        @csrf
-                                        @method('DELETE')
-
-                                        <button
-                                            type="submit"
-                                            class="btn btn-sm btn-danger"
+                                        {{-- Edit Button --}}
+                                        <a
+                                            href="{{ route('subjects.edit', $subject) }}"
+                                            class="btn btn-sm btn-primary"
                                         >
-                                            Delete
-                                        </button>
+                                            Edit
+                                        </a>
 
-                                    </form>
+                                        {{-- Delete Button --}}
+                                        <form
+                                            action="{{ route('subjects.destroy', $subject) }}"
+                                            method="POST"
+                                            class="d-inline"
+                                            onsubmit="return confirm('Are you sure you want to delete this subject?');"
+                                        >
 
-                                </td>
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-sm btn-danger"
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </form>
+
+                                    </td>
+                                @endauth
 
                             </tr>
 
                         @empty
 
                             <tr>
-                                <td colspan="6" class="text-center">
+                                <td colspan="{{ auth()->check() ? 6 : 5 }}"
+                                    class="text-center">
                                     No subjects found.
                                 </td>
                             </tr>
