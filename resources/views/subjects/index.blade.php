@@ -23,7 +23,6 @@
     @if ($errors->any())
         <div class="alert alert-danger">
             <strong>Please fix the following errors:</strong>
-
             <ul class="mb-0 mt-2">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -32,14 +31,23 @@
         </div>
     @endif
 
-    {{-- Add Subject Button: Authenticated Users Only --}}
-    @auth
+    {{-- Add Subject: Admin Only --}}
+    @can('create', \App\Models\Subject::class)
         <div class="mb-3">
             <a href="{{ route('subjects.create') }}"
                class="btn btn-primary">
                 + Add Subject
             </a>
         </div>
+    @endcan
+
+    {{-- Read-only Message: Signed-in Non-admin Only --}}
+    @auth
+        @cannot('create', \App\Models\Subject::class)
+            <p class="text-muted small">
+                You are viewing this list in read-only mode.
+            </p>
+        @endcannot
     @endauth
 
     {{-- Search, Filters, and Sorting --}}
@@ -217,10 +225,10 @@
                             <th>Units</th>
                             <th>Prerequisite</th>
 
-                            {{-- Actions Heading: Authenticated Users Only --}}
-                            @auth
+                            {{-- Actions Heading: Admin Only --}}
+                            @can('create', \App\Models\Subject::class)
                                 <th>Actions</th>
-                            @endauth
+                            @endcan
                         </tr>
                     </thead>
 
@@ -262,8 +270,8 @@
                                     @endif
                                 </td>
 
-                                {{-- Edit and Delete: Authenticated Users Only --}}
-                                @auth
+                                {{-- Edit and Delete: Admin Only --}}
+                                @can('update', $subject)
                                     <td>
 
                                         {{-- Edit Button --}}
@@ -274,36 +282,37 @@
                                             Edit
                                         </a>
 
-                                        {{-- Delete Button --}}
-                                        <form
-                                            action="{{ route('subjects.destroy', $subject) }}"
-                                            method="POST"
-                                            class="d-inline"
-                                            onsubmit="return confirm('Are you sure you want to delete this subject?');"
-                                        >
-
-                                            @csrf
-                                            @method('DELETE')
-
-                                            <button
-                                                type="submit"
-                                                class="btn btn-sm btn-danger"
+                                        {{-- Entire Delete Form: Admin Only --}}
+                                        @can('delete', $subject)
+                                            <form
+                                                action="{{ route('subjects.destroy', $subject) }}"
+                                                method="POST"
+                                                class="d-inline"
+                                                onsubmit="return confirm('Are you sure you want to delete this subject?');"
                                             >
-                                                Delete
-                                            </button>
 
-                                        </form>
+                                                @csrf
+                                                @method('DELETE')
+
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-sm btn-danger"
+                                                >
+                                                    Delete
+                                                </button>
+
+                                            </form>
+                                        @endcan
 
                                     </td>
-                                @endauth
+                                @endcan
 
                             </tr>
 
                         @empty
 
                             <tr>
-                                <td colspan="{{ auth()->check() ? 6 : 5 }}"
-                                    class="text-center">
+                                <td colspan="6" class="text-center">
                                     No subjects found.
                                 </td>
                             </tr>

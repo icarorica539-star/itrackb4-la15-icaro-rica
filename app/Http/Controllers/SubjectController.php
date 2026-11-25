@@ -5,13 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Prerequisite;
 use App\Models\Subject;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
 class SubjectController extends Controller
 {
-    /**
-     * Display the list of subjects.
-     */
     public function index(Request $request)
     {
         $query = Subject::with('prerequisite');
@@ -58,11 +56,10 @@ class SubjectController extends Controller
         ));
     }
 
-    /**
-     * Show the form for creating a subject.
-     */
     public function create()
     {
+        Gate::authorize('create', Subject::class);
+
         $prerequisites = Prerequisite::all();
 
         return view('subjects.create', compact('prerequisites'));
@@ -73,6 +70,8 @@ class SubjectController extends Controller
      */
     public function store(Request $request)
     {
+        Gate::authorize('create', Subject::class);
+
         $validated = $request->validate([
             'code' => 'required|string|max:255|unique:subjects,code',
             'title' => 'required|string|max:255',
@@ -94,21 +93,18 @@ class SubjectController extends Controller
             ->with('success', 'Subject added successfully!');
     }
 
-    /**
-     * Display the specified subject.
-     */
+    
     public function show(Subject $subject)
     {
         $subject->load('prerequisite');
 
         return view('subjects.show', compact('subject'));
     }
-
-    /**
-     * Show the form for editing a subject.
-     */
+    
     public function edit(Subject $subject)
     {
+        Gate::authorize('update', $subject);
+
         $prerequisites = Prerequisite::all();
 
         return view('subjects.edit', compact(
@@ -116,12 +112,11 @@ class SubjectController extends Controller
             'prerequisites'
         ));
     }
-
-    /**
-     * Update the specified subject.
-     */
+   
     public function update(Request $request, Subject $subject)
     {
+        Gate::authorize('update', $subject);
+
         $validated = $request->validate([
             'code' => 'required|string|max:255|unique:subjects,code,' . $subject->id,
             'title' => 'required|string|max:255',
@@ -139,11 +134,10 @@ class SubjectController extends Controller
             ->with('success', 'Subject updated successfully!');
     }
 
-    /**
-     * Remove the specified subject.
-     */
     public function destroy(Subject $subject)
     {
+        Gate::authorize('delete', $subject);
+
         abort_if(
             $subject->prerequisite !== null &&
             $subject->prerequisite->subjects()->count() === 1,
